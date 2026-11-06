@@ -1,0 +1,24 @@
+<!--index 启动页-->
+<navigation-bar title="E7 RTA 助手" back="{{false}}" color="#e8eef6" background="#0b0d12" />
+<scroll-view class="scrollarea" scroll-y type="list">
+  <view class="container">
+    <view class="hero">
+      <view class="title">RTA 选人<text class="hl">沙盘</text></view>
+      <view class="subtitle">BAN / PICK 推演 · 双服合并口径</view>
+    </view>
+
+    <view class="meta">
+      <view class="meta-row"><text class="k">数据生成</text><text class="v">{{generated}}</text></view>
+      <view class="meta-row"><text class="k">英雄总数</text><text class="v">{{heroTotal}} 名</text></view>
+      <view class="meta-row"><text class="k">常用池</text><text class="v">{{poolTotal}} 名（选取率 ≥1%）</text></view>
+      <view class="meta-row"><text class="k">流程</text><text class="v">预禁 2+2 → 选人 1-2-2-2-2-1 → 后禁 1+1 → 4v4</text></view>
+    </view>
+
+    <view class="entry" bindtap="goSimulator">
+      <view class="entry-main">进入选人沙盘</view>
+      <view class="entry-sub">实时推荐 · 预测胜率 · AI 建议禁用</view>
+    </view>
+
+    <view class="foot">数据源：rta.e7.wiki / rta-api.e7.wiki（国服 + 外服合并）</view>
+  </view>
+</scroll-view>

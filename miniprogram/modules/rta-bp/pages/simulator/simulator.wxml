@@ -1,0 +1,255 @@
+<!--RTA 选人沙盘 · BAN/PICK-->
+<navigation-bar title="RTA 选人沙盘" back="{{true}}" color="#e8eef6" background="#0b0d12" />
+
+<view class="wrap">
+  <!-- 页头 -->
+  <view class="header">
+    <view class="title">RTA 选人沙盘 · <text class="hl">BAN / PICK</text></view>
+    <view class="sub">{{meta.generated}} ｜ {{meta.heroTotal}} 名英雄 · 池 {{meta.poolTotal}} 名常用</view>
+  </view>
+
+  <!-- 工具行 -->
+  <view class="toolbar">
+    <view class="seg">
+      <view class="segbtn {{item.active ? 'on' : ''}}" wx:for="{{firstSeg}}" wx:key="key"
+            data-key="{{item.key}}" bindtap="tapFirstSeg">{{item.label}}</view>
+    </view>
+    <view class="spacer" />
+    <view class="btn" bindtap="tapDemo">一键演示</view>
+    <view class="btn {{canAuto ? '' : 'dis'}}" bindtap="tapAuto">自动模拟对手</view>
+    <view class="btn {{canUndo ? '' : 'dis'}}" bindtap="tapUndo">撤销</view>
+    <view class="btn" bindtap="tapReset">重置</view>
+  </view>
+
+  <!-- 步骤条 -->
+  <view class="steps">
+    <block wx:for="{{steps}}" wx:key="label">
+      <view class="sp {{item.state}}">
+        <view class="n">{{item.state === 'done' ? '✓' : item.num}}</view>
+        <text>{{item.label}}</text>
+      </view>
+      <view class="arw" wx:if="{{index < steps.length - 1}}">›</view>
+    </block>
+    <view class="prog"><text class="b">{{progressText}}</text></view>
+    <view class="wr {{wrBadge.cls}}" wx:if="{{wrBadge}}">{{wrBadge.text}}</view>
+  </view>
+
+  <!-- 推荐横条 -->
+  <view class="recwrap">
+    <view class="rhead">
+      <view class="dot" />
+      <view class="pt">{{phase.title}}</view>
+      <view class="pstep" wx:if="{{phase.step}}">{{phase.step}}</view>
+      <view class="hint">{{phase.hint}}</view>
+    </view>
+    <view class="qrow" wx:if="{{quickPicks.length}}">
+      <text class="qlb">高频候选：</text>
+      <view class="qb" wx:for="{{quickPicks}}" wx:key="code" data-code="{{item.code}}" bindtap="tapCell">{{item.name}}</view>
+    </view>
+    <view class="qrow">
+      <text class="qlb">套用方案：</text>
+      <view class="qb" data-key="A" bindtap="tapPreset">A</view>
+      <view class="qb" data-key="B" bindtap="tapPreset">B</view>
+      <view class="qb" data-key="C" bindtap="tapPreset">C</view>
+    </view>
+    <scroll-view class="recstrip" scroll-x enable-flex wx:if="{{recs.length}}">
+      <view class="rc" wx:for="{{recs}}" wx:key="code" data-code="{{item.code}}" bindtap="tapCell">
+        <image class="av" src="{{item.avatar}}" mode="aspectFill" />
+        <view class="rbd">
+          <view class="l1">
+            <text class="nm">{{item.name}}</text>
+            <text class="tg">{{item.attrRole}}</text>
+            <text class="sc {{item.scoreCls}}">{{item.scoreLabel}}</text>
+          </view>
+          <view class="l2">
+            <text class="tg {{tag.cls}}" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="text">{{tag.text}}</text>
+          </view>
+          <view class="bars">
+            <view class="bar"><view class="fill c" style="width: {{item.barC}}%" /></view>
+            <view class="bar"><view class="fill s" style="width: {{item.barS}}%" /></view>
+            <view class="bar"><view class="fill w" style="width: {{item.barW}}%" /></view>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+    <view class="empty" wx:if="{{recsEmpty}}">{{recsEmpty}}</view>
+    <view class="legend">
+      <view class="lgi"><view class="lg c" /><text>克制</text></view>
+      <view class="lgi"><view class="lg s" /><text>配合</text></view>
+      <view class="lgi"><view class="lg w" /><text>强度</text></view>
+    </view>
+  </view>
+
+  <!-- 英雄池（居中主交互区） -->
+  <view class="panel pool">
+    <view class="ptop">
+      <input class="search" placeholder="搜索英雄名 / 代号" value="{{pool.query}}" bindinput="onSearch" />
+      <picker range="{{pool.sorts}}" value="{{pool.sortIndex}}" bindchange="onSortChange">
+        <view class="picker">{{pool.sorts[pool.sortIndex]}} ▾</view>
+      </picker>
+    </view>
+    <scroll-view class="fscroll" scroll-x>
+      <view class="fseg">
+        <view class="segbtn {{item.active ? 'on' : ''}}" wx:for="{{pool.attrs}}" wx:key="key"
+              data-key="{{item.key}}" bindtap="tapFilterAttr">
+          <image class="sico" src="{{item.icon}}" wx:if="{{item.icon}}" />
+          <text>{{item.label}}</text>
+        </view>
+      </view>
+    </scroll-view>
+    <scroll-view class="fscroll" scroll-x>
+      <view class="fseg">
+        <view class="segbtn {{item.active ? 'on' : ''}}" wx:for="{{pool.roles}}" wx:key="key"
+              data-key="{{item.key}}" bindtap="tapFilterRole">
+          <image class="sico" src="{{item.icon}}" wx:if="{{item.icon}}" />
+          <text>{{item.label}}</text>
+        </view>
+      </view>
+    </scroll-view>
+    <view class="poolcnt">{{pool.countText}}</view>
+    <view class="grid">
+      <view class="cell {{item.dim ? 'dim' : ''}} {{item.markCls}}" wx:for="{{pool.cells}}" wx:key="code"
+            data-code="{{item.code}}" bindtap="tapCell">
+        <view class="at" style="background: {{item.color}}" />
+        <image class="cav" src="{{item.avatar}}" mode="aspectFill" />
+        <view class="cnm">{{item.name}}</view>
+        <view class="rec" wx:if="{{item.recBadge}}">{{item.recBadge}}</view>
+        <view class="mark {{item.markCls}}" wx:if="{{item.mark}}">{{item.mark}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 我方 -->
+  <view class="panel team {{mineActive ? 'active' : ''}}">
+    <view class="th"><text class="tname mine">我方</text><text class="cnt">{{mine.countText}}</text></view>
+    <view class="laneT">预禁 2（后禁阶段还可再禁对方 1 名）</view>
+    <view class="bans">
+      <view class="bslot" wx:for="{{mine.bans}}" wx:key="idx"
+            data-code="{{item.code}}" bindtap="tapCell">
+        <image wx:if="{{!item.empty}}" class="bav" src="{{item.avatar}}" mode="aspectFill" />
+        <view class="bx" wx:if="{{!item.empty}}">✕</view>
+        <text class="bempty" wx:if="{{item.empty}}">BAN</text>
+      </view>
+    </view>
+    <view class="laneT">出战 5 · 第 3 手为保护位（不可被后禁）</view>
+    <view class="picks">
+      <view class="pcard {{item.cls}}" wx:for="{{mine.picks}}" wx:key="idx"
+            data-code="{{item.code}}" bindtap="tapCell">
+        <view class="no">{{item.idx + 1}}</view>
+        <block wx:if="{{!item.empty}}">
+          <image class="av2" src="{{item.avatar}}" mode="aspectFill" />
+          <view class="bd">
+            <view class="nm">
+              <text>{{item.name}}</text>
+              <image class="sico" src="{{item.attrIcon}}" wx:if="{{item.attrIcon}}" />
+              <image class="sico" src="{{item.roleIcon}}" wx:if="{{item.roleIcon}}" />
+            </view>
+            <view class="st">{{item.stText}}</view>
+          </view>
+          <view class="prot" wx:if="{{item.isProtect}}" />
+        </block>
+        <block wx:else>
+          <view class="bd">
+            <view class="nm">Pick {{item.idx + 1}}</view>
+            <view class="st {{item.isTurn ? 'turnst' : ''}}">{{item.turnText}}</view>
+          </view>
+          <view class="prot" wx:if="{{item.isProtect}}" />
+        </block>
+        <view class="sugtag" wx:if="{{item.isSugBan}}">AI 建议禁</view>
+        <view class="fbmask" wx:if="{{item.isFinalBan}}">后禁</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 对手 -->
+  <view class="panel team {{enemyActive ? 'active' : ''}}">
+    <view class="th"><text class="tname enemy">对手</text><text class="cnt">{{enemy.countText}}</text></view>
+    <view class="laneT">预禁 2（后禁阶段还可再禁对方 1 名）</view>
+    <view class="bans">
+      <view class="bslot" wx:for="{{enemy.bans}}" wx:key="idx"
+            data-code="{{item.code}}" bindtap="tapCell">
+        <image wx:if="{{!item.empty}}" class="bav" src="{{item.avatar}}" mode="aspectFill" />
+        <view class="bx" wx:if="{{!item.empty}}">✕</view>
+        <text class="bempty" wx:if="{{item.empty}}">BAN</text>
+      </view>
+    </view>
+    <view class="laneT">出战 5 · 第 3 手为保护位（不可被后禁）</view>
+    <view class="picks">
+      <view class="pcard {{item.cls}}" wx:for="{{enemy.picks}}" wx:key="idx"
+            data-code="{{item.code}}" bindtap="tapCell">
+        <view class="no">{{item.idx + 1}}</view>
+        <block wx:if="{{!item.empty}}">
+          <image class="av2" src="{{item.avatar}}" mode="aspectFill" />
+          <view class="bd">
+            <view class="nm">
+              <text>{{item.name}}</text>
+              <image class="sico" src="{{item.attrIcon}}" wx:if="{{item.attrIcon}}" />
+              <image class="sico" src="{{item.roleIcon}}" wx:if="{{item.roleIcon}}" />
+            </view>
+            <view class="st">{{item.stText}}</view>
+          </view>
+          <view class="prot" wx:if="{{item.isProtect}}" />
+        </block>
+        <block wx:else>
+          <view class="bd">
+            <view class="nm">Pick {{item.idx + 1}}</view>
+            <view class="st {{item.isTurn ? 'turnst' : ''}}">{{item.turnText}}</view>
+          </view>
+          <view class="prot" wx:if="{{item.isProtect}}" />
+        </block>
+        <view class="sugtag" wx:if="{{item.isSugBan}}">AI 建议禁</view>
+        <view class="fbmask" wx:if="{{item.isFinalBan}}">后禁</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 结算 -->
+  <view class="panel result" wx:if="{{showResult}}">
+    <view class="rtitle">4v4 结算 · 相对胜率 {{result.wrText}}</view>
+    <view class="vs">
+      <view class="side">
+        <view class="hf {{f.out ? 'out' : ''}}" wx:for="{{result.mineSide}}" wx:key="name">
+          <image src="{{f.avatar}}" mode="aspectFill" />
+          <text class="hn">{{f.name}}</text>
+        </view>
+      </view>
+      <view class="mid">
+        <text class="v">{{result.verdict}}</text>
+        <text class="d">{{result.diffText}}</text>
+      </view>
+      <view class="side">
+        <view class="hf {{f.out ? 'out' : ''}}" wx:for="{{result.enemySide}}" wx:key="name">
+          <image src="{{f.avatar}}" mode="aspectFill" />
+          <text class="hn">{{f.name}}</text>
+        </view>
+      </view>
+    </view>
+    <view class="cmp">
+      <view class="tr th">
+        <view class="td label">指标</view>
+        <view class="td">我方 4 人</view>
+        <view class="td">对手 4 人</view>
+      </view>
+      <view class="tr" wx:for="{{result.rows}}" wx:key="label">
+        <view class="td label">{{item.label}}</view>
+        <view class="td {{item.mineCls}}">{{item.mine}}</view>
+        <view class="td {{item.enemyCls}}">{{item.enemy}}</view>
+      </view>
+    </view>
+    <view class="pills">
+      <text class="pill r">对手后禁：{{result.pillEnemyBan}}</text>
+      <text class="pill b">我方后禁：{{result.pillMineBan}}</text>
+      <text class="pill">{{result.pillMineCount}}</text>
+      <text class="pill">{{result.pillEnemyCount}}</text>
+    </view>
+    <view class="note">相对胜率 = 50 + 13·tanh(综合分差/6)，只是把阵容差异映射成便于比较的刻度，不是校准过的真实胜率；真实对局还取决于装备、速度线、神器与操作。</view>
+  </view>
+
+  <!-- 口径说明 -->
+  <view class="note tail">
+    口径：克制分 = 双方对位胜率相对 50% 的偏移（双向按样本加权平均）；配合分 = 与已选队友的搭配增益；
+    强度分 = 合并胜率经贝叶斯收缩后减 50。综合分 = 克制 ×1 + 配合 ×0.5 + 强度 ×0.2。
+    数据为国服 + 外服按对局数合并；样本不足 500 场不进推荐榜；英雄池只显示选取率 ≥1% 的 RTA 常用英雄。
+    本工具用于 BP 推演，胜率估计是相对指数而非校准概率。
+  </view>
+</view>
